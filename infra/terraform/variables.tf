@@ -5,5 +5,5 @@ variable "projectName" {
 
 variable "region_default" {
   type = string
-  default = "us-east-1"
+  default = "us-east-2"
 }

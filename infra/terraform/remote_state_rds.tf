@@ -3,7 +3,7 @@ data "terraform_remote_state" "rds" {
 
   config = {
     bucket = "tf-state-challenge-bucket"
-    key    = "rds/terraform.tfstate"
+    key    = local.rds_state_path
     region = "us-east-2"
   }
 }
