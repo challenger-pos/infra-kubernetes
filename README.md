@@ -204,11 +204,3 @@ terraform destroy -auto-approve
 - Use subnets privadas para workloads sensíveis e minimize acesso público.
 
 ---
-
-## ✅ Deseja que eu adicione
-
-- **script de bootstrap** (`scripts/bootstrap-eks.sh`) que cria EKS + OIDC + policies e instala addons, ou
-- **módulo Terraform de exemplo** (com VPC, EKS e node groups) pronto para usar.
-
-Responda **"bootstrap"**, **"terraform"** ou **"ambos"** e eu adiciono os artefatos correspondentes.
-
