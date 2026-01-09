@@ -40,6 +40,6 @@ jobs:
 
       - name: Terraform Gateway Apply
         working-directory: ${{ env.TERRAFORM_API_GW_DIR }}
-        run: terraform apply -auto-approve -var="arn_user_homolog=${{ vars.ARN_USER_HOMOLOG }}" -var="arn_user_prod=${{ vars.ARN_USER_PROD }}" -var="arn_user_dev=${{ vars.ARN_USER_DEV }}"
+        run: terraform apply -auto-approve
         env:
           TF_VAR_environment: ${{ env.ENVIRONMENT }}
