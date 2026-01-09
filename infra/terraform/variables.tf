@@ -10,5 +10,5 @@ variable "region_default" {
 
 variable "environment" {
   type    = string
-  default = "homologation"
+  default = "develop"
 }

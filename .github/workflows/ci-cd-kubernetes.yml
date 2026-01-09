@@ -10,13 +10,13 @@ on:
 
 env:
   TERRAFORM_API_GW_DIR: infra/terraform
-  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || 'homologation' }}
+  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
 
 jobs:
   deploy-gateway:
     name: Deploy Infra Kubernetes
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || 'homologation' }}
+    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
 
     steps:
       - name: Checkout code
