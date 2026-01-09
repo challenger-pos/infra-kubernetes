@@ -1,23 +1,22 @@
-# resource "aws_security_group" "challengeone_sg" {
-#   name        = "${var.projectName}-sg"
-#   description = "Enables access to the ChallengeOne application"
-#   vpc_id      = aws_vpc.vpc_challengeone.id
+resource "aws_security_group" "challengeone_sg" {
+  name        = "${var.projectName}-sg"
+  description = "Enables access to the ChallengeOne application"
+  vpc_id      = aws_vpc.vpc_challengeone.id
 
-#   ingress {
-#     from_port   = 8080
-#     to_port     = 8080
-#     protocol    = "tcp"
-#     cidr_blocks = [aws_vpc.vpc_challengeone.cidr_block]
-#     security_groups = [aws_security_group.api_gateway_vpc_link.id]
-#   }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.vpc_challengeone.cidr_block]
+  }
 
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
 
 
@@ -87,65 +86,71 @@
 # }
 
 
+#------------
 
+#ALB Security Group (base)
+# resource "aws_security_group" "challengeone_alb" {
+#   name_prefix = "challengeone-alb"
+#   description = "Security group for ChallengeOne ALB"
+#   vpc_id      = aws_vpc.vpc_challengeone.id
 
-# ALB Security Group (base)
-resource "aws_security_group" "challengeone_alb" {
-  name_prefix = "challengeone-alb"
-  description = "Security group for ChallengeOne ALB"
-  vpc_id      = aws_vpc.vpc_challengeone.id
+#   tags = {
+#     Name = "${var.projectName}-alb-sg"
+#   }
+# }
 
-  tags = {
-    Name = "${var.projectName}-alb-sg"
-  }
-}
+# # API Gateway VPC Link Security Group (base)
+# resource "aws_security_group" "api_gateway_vpc_link" {
+#   name_prefix = "api-gateway-vpc-link-"
+#   description = "Security group for API Gateway VPC Link"
+#   vpc_id      = aws_vpc.vpc_challengeone.id
 
-# API Gateway VPC Link Security Group (base)
-resource "aws_security_group" "api_gateway_vpc_link" {
-  name_prefix = "api-gateway-vpc-link-"
-  description = "Security group for API Gateway VPC Link"
-  vpc_id      = aws_vpc.vpc_challengeone.id
+#   tags = {
+#     Name = "${var.projectName}-api-gateway-vpc-link-sg"
+#   }
+# }
 
-  tags = {
-    Name = "${var.projectName}-api-gateway-vpc-link-sg"
-  }
-}
+# resource "aws_security_group" "eks_nodes" {
+#   name        = "${var.projectName}-eks-nodes"
+#   vpc_id      = aws_vpc.vpc_challengeone.id
+#   # ... regras ...
+# }
 
-# Rules for ALB Security Group
-resource "aws_security_group_rule" "alb_ingress_from_api_gateway" {
-  type                     = "ingress"
-  from_port                = 80
-  to_port                  = 80
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.challengeone_alb.id
-  source_security_group_id = aws_security_group.api_gateway_vpc_link.id
-}
+# # Rules for ALB Security Group
+# resource "aws_security_group_rule" "alb_ingress_from_api_gateway" {
+#   type                     = "ingress"
+#   from_port                = 80
+#   to_port                  = 80
+#   protocol                 = "tcp"
+#   security_group_id        = aws_security_group.challengeone_alb.id
+#   source_security_group_id = aws_security_group.api_gateway_vpc_link.id
+# }
 
-resource "aws_security_group_rule" "alb_egress_to_eks_nodes" {
-  type                     = "egress"
-  from_port                = 8080
-  to_port                  = 8080
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.challengeone_alb.id
-  source_security_group_id = data.aws_security_group.eks_node_sg.id # You'll need to get this from your EKS setup
-}
+# resource "aws_security_group_rule" "alb_egress_to_eks_nodes" {
+#   type                     = "egress"
+#   from_port                = 8080
+#   to_port                  = 8080
+#   protocol                 = "tcp"
+#   security_group_id        = aws_security_group.challengeone_alb.id
+#   source_security_group_id = data.aws_security_group.eks_node_sg.id # You'll need to get this from your EKS setup
+# }
 
-# Rules for API Gateway VPC Link Security Group
-resource "aws_security_group_rule" "api_gateway_egress_to_alb" {
-  type                     = "egress"
-  from_port                = 80
-  to_port                  = 80
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.api_gateway_vpc_link.id
-  source_security_group_id = aws_security_group.challengeone_alb.id
-}
+# # Rules for API Gateway VPC Link Security Group
+# resource "aws_security_group_rule" "api_gateway_egress_to_alb" {
+#   type                     = "egress"
+#   from_port                = 80
+#   to_port                  = 80
+#   protocol                 = "tcp"
+#   security_group_id        = aws_security_group.api_gateway_vpc_link.id
+#   source_security_group_id = aws_security_group.challengeone_alb.id
+# }
 
-# Rule to allow ALB to reach EKS nodes
-resource "aws_security_group_rule" "eks_nodes_from_alb" {
-  type                     = "ingress"
-  from_port                = 8080
-  to_port                  = 8080
-  protocol                 = "tcp"
-  security_group_id        = data.aws_security_group.eks_node_sg.id
-  source_security_group_id = aws_security_group.challengeone_alb.id
-}
+# # Rule to allow ALB to reach EKS nodes
+# resource "aws_security_group_rule" "eks_nodes_from_alb" {
+#   type                     = "ingress"
+#   from_port                = 8080
+#   to_port                  = 8080
+#   protocol                 = "tcp"
+#   security_group_id        = data.aws_security_group.eks_node_sg.id
+#   source_security_group_id = aws_security_group.challengeone_alb.id
+# }
