@@ -2,7 +2,7 @@ name: CI - Deploy Infra Kubernetes
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "homologation" ]
   workflow_dispatch:
 
 env:
