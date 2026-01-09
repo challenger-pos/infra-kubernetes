@@ -2,18 +2,21 @@ name: CI - Deploy Infra Kubernetes
 
 on:
   push:
-    branches: [ "main", "homologation" ]
+    branches:
+      - main
+      - homologation
+      - 'feature/**'
   workflow_dispatch:
 
 env:
   TERRAFORM_API_GW_DIR: infra/terraform
-  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || 'homologation' }}
 
 jobs:
   deploy-gateway:
     name: Deploy Infra Kubernetes
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+    environment: ${{ github.ref_name == 'main' && 'production' || 'homologation' }}
 
     steps:
       - name: Checkout code

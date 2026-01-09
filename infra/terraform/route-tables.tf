@@ -3,7 +3,7 @@ resource "aws_route_table" "eks_public" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.eks.id
+    gateway_id = data.terraform_remote_state.rds.outputs.igw_id
   }
 }
 

@@ -6,16 +6,17 @@ resource "aws_eks_node_group" "node_group" {
     aws_subnet.eks_public_1.id,
     aws_subnet.eks_public_2.id
   ]
-  disk_size = 50
-  instance_types = [ "t3.micro" ]
+
+  instance_types = ["t3.small"]
+  disk_size      = 20
 
   scaling_config {
-    desired_size = 3
-    max_size     = 4
-    min_size     = 2
+    desired_size = 2
+    max_size     = 3
+    min_size     = 1
   }
 
-  update_config { 
+  update_config {
     max_unavailable = 1
   }
 

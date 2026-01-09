@@ -55,3 +55,13 @@ resource "aws_security_group_rule" "ingress_nodeports" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id
 }
+
+resource "aws_security_group_rule" "allow_eks_to_rds" {
+  type              = "ingress"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+
+  security_group_id = data.terraform_remote_state.rds.outputs.rds_sg_id
+  source_security_group_id = aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id
+}
