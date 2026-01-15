@@ -1,20 +1,9 @@
-# --- 1. CONFIGURAÇÃO DE AUTENTICAÇÃO ---
-data "aws_eks_cluster_auth" "cluster_auth" {
-  name = aws_eks_cluster.cluster.name
-}
-
-# --- 2. OIDC PROVIDER (Essencial para o Controller funcionar) ---
-data "tls_certificate" "eks" {
-  url = aws_eks_cluster.cluster.identity[0].oidc[0].issuer
-}
-
 resource "aws_iam_openid_connect_provider" "eks" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
   url             = aws_eks_cluster.cluster.identity[0].oidc[0].issuer
 }
 
-# --- 3. CRIAÇÃO DA ROLE QUE O TERRAFORM DISSE NÃO EXISTIR ---
 resource "aws_iam_role" "lb_controller" {
   name = "eks-lb-controller-role"
 
@@ -35,19 +24,16 @@ resource "aws_iam_role" "lb_controller" {
   })
 }
 
-# --- 4. ANEXO DA POLÍTICA (O attachment que deu erro) ---
 resource "aws_iam_role_policy_attachment" "lb_controller_attach" {
   policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
   role       = aws_iam_role.lb_controller.name
 }
 
-# Permissão necessária para o controller enxergar AZs e Subnets (Resolve o 403)
 resource "aws_iam_role_policy_attachment" "lb_controller_ec2_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
   role       = aws_iam_role.lb_controller.name
 }
 
-# Política adicional para criar Service Linked Roles
 resource "aws_iam_role_policy" "lb_controller_additional" {
   name = "eks-lb-controller-additional"
   role = aws_iam_role.lb_controller.id
@@ -61,16 +47,6 @@ resource "aws_iam_role_policy" "lb_controller_additional" {
   })
 }
 
-# --- 5. PROVIDER HELM ---
-provider "helm" {
-  kubernetes {
-    host                   = aws_eks_cluster.cluster.endpoint
-    cluster_ca_certificate = base64decode(aws_eks_cluster.cluster.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.cluster_auth.token
-  }
-}
-
-# --- 6. INSTALAÇÃO DO CONTROLLER (Usa a Role acima) ---
 resource "helm_release" "lb_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
@@ -79,7 +55,9 @@ resource "helm_release" "lb_controller" {
 
   depends_on = [
     aws_eks_node_group.node_group,
-    aws_iam_role_policy_attachment.lb_controller_attach
+    aws_iam_role.lb_controller,
+    aws_iam_role_policy_attachment.lb_controller_attach,
+    aws_iam_role_policy_attachment.lb_controller_final_attach
   ]
 
   set {
@@ -96,7 +74,7 @@ resource "helm_release" "lb_controller" {
   }
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = aws_iam_role.lb_controller.arn # Referência à Role criada no passo 3
+    value = aws_iam_role.lb_controller.arn
   }
   set {
     name  = "region"
@@ -151,7 +129,6 @@ resource "aws_iam_policy" "lb_controller_policy" {
   })
 }
 
-# 2. Anexe essa nova política à sua role
 resource "aws_iam_role_policy_attachment" "lb_controller_final_attach" {
   policy_arn = aws_iam_policy.lb_controller_policy.arn
   role       = aws_iam_role.lb_controller.name

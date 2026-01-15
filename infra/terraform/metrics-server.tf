@@ -4,6 +4,10 @@ resource "helm_release" "metrics_server" {
   chart      = "metrics-server"
   namespace  = "kube-system"
 
+  depends_on = [
+    aws_eks_node_group.node_group
+  ]
+
   values = [<<EOF
 args:
   - --kubelet-insecure-tls
