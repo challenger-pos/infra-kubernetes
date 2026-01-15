@@ -5,17 +5,18 @@ on:
     branches:
       - main
       - homologation
+      - 'feature/**'
   workflow_dispatch:
 
 env:
-  TERRAFORM_API_GW_DIR: infra/terraform
-  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+  TERRAFORM_INFRA_DIR: infra/terraform
+  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'homologation') }}
 
 jobs:
-  deploy-gateway:
+  deploy-infra:
     name: Deploy Infra Kubernetes
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'homologation') }}
 
     steps:
       - name: Checkout code
@@ -33,12 +34,12 @@ jobs:
         with:
           terraform_version: 1.9.7
 
-      - name: Terraform Gateway Init
-        working-directory: ${{ env.TERRAFORM_API_GW_DIR }}
+      - name: Terraform Infra Init
+        working-directory: ${{ env.TERRAFORM_INFRA_DIR }}
         run: terraform init -backend-config="key=kubernetes/${{ env.ENVIRONMENT }}/terraform.tfstate"
 
-      - name: Terraform Gateway Apply
-        working-directory: ${{ env.TERRAFORM_API_GW_DIR }}
+      - name: Terraform Infra Apply
+        working-directory: ${{ env.TERRAFORM_INFRA_DIR }}
         run: terraform apply -auto-approve
         env:
           TF_VAR_environment: ${{ env.ENVIRONMENT }}

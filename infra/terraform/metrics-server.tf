@@ -4,6 +4,11 @@ resource "helm_release" "metrics_server" {
   chart      = "metrics-server"
   namespace  = "kube-system"
 
+  depends_on = [
+    null_resource.wait_for_eks,
+    null_resource.wait_for_nodes
+  ]
+
   values = [<<EOF
 args:
   - --kubelet-insecure-tls
