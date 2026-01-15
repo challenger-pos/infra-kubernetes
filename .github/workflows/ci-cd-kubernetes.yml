@@ -1,0 +1,44 @@
+name: CI - Deploy Infra Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+      - homologation
+  workflow_dispatch:
+
+env:
+  TERRAFORM_API_GW_DIR: infra/terraform
+  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+
+jobs:
+  deploy-gateway:
+    name: Deploy Infra Kubernetes
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.7
+
+      - name: Terraform Gateway Init
+        working-directory: ${{ env.TERRAFORM_API_GW_DIR }}
+        run: terraform init -backend-config="key=kubernetes/${{ env.ENVIRONMENT }}/terraform.tfstate"
+
+      - name: Terraform Gateway Apply
+        working-directory: ${{ env.TERRAFORM_API_GW_DIR }}
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
