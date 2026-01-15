@@ -5,18 +5,17 @@ on:
     branches:
       - main
       - homologation
-      - 'feature/**'
   workflow_dispatch:
 
 env:
   TERRAFORM_INFRA_DIR: infra/terraform
-  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'homologation') }}
+  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
 
 jobs:
   deploy-infra:
     name: Deploy Infra Kubernetes
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'homologation') }}
+    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
 
     steps:
       - name: Checkout code
