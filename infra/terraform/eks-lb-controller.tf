@@ -1,11 +1,3 @@
-data "aws_eks_cluster_auth" "cluster_auth" {
-  name = aws_eks_cluster.cluster.name
-}
-
-data "tls_certificate" "eks" {
-  url = aws_eks_cluster.cluster.identity[0].oidc[0].issuer
-}
-
 resource "aws_iam_openid_connect_provider" "eks" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
@@ -55,14 +47,6 @@ resource "aws_iam_role_policy" "lb_controller_additional" {
   })
 }
 
-provider "helm" {
-  kubernetes {
-    host                   = aws_eks_cluster.cluster.endpoint
-    cluster_ca_certificate = base64decode(aws_eks_cluster.cluster.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.cluster_auth.token
-  }
-}
-
 resource "helm_release" "lb_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
@@ -70,9 +54,10 @@ resource "helm_release" "lb_controller" {
   namespace  = "kube-system"
 
   depends_on = [
-    null_resource.wait_for_eks,
-    null_resource.wait_for_nodes,
-    aws_iam_role_policy_attachment.lb_controller_attach
+    aws_eks_node_group.node_group,
+    aws_iam_role.lb_controller,
+    aws_iam_role_policy_attachment.lb_controller_attach,
+    aws_iam_role_policy_attachment.lb_controller_final_attach
   ]
 
   set {
