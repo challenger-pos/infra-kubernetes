@@ -50,3 +50,48 @@ Observação: o backend remoto é configurado em [infra/terraform/backend.tf](in
 ## Outputs importantes
 - O módulo exporta (exemplos) `cluster_name`, `cluster_endpoint`, `cluster_ca`, ARNs de roles criadas, IDs de security groups e outputs para o AWS LB Controller. Consulte [infra/terraform/outputs.tf](infra/terraform/outputs.tf) para a lista completa.
 
+## Arquitetura do EKS
+
+
+```mermaid
+flowchart LR
+  Internet["Internet / Usuários"] -->|HTTPS| ALB["ALB - Load Balancer (Ingress)"]
+  Internet -->|HTTPS| APIGW["API Gateway (público)"]
+  APIGW -->|invoca| Lambda["AWS Lambda (valida CPF -> JWT)"]
+  APIGW -->|rota pública| ALB
+
+  subgraph VPC["VPC"]
+    subgraph Public_Subnets["Subnets Públicas"]
+      ALB
+      APIGW
+    end
+
+    subgraph Private_Subnets["Subnets Privadas"]
+      ALB --> Ingress["Ingress Controller (ALB Ingress)"]
+      Ingress --> Service["Service - challengeone (ClusterIP)"]
+      Service --> Deployment["Deployment -> ReplicaSet -> Pods"]
+      Deployment --> Pod["Pod - application (Spring Boot)"]
+      Pod -->|lê/escreve| RDS[(RDS - PostgreSQL)]
+      Pod --> ConfigMap["ConfigMap"]
+      Pod --> Secret["Kubernetes Secret"]
+      Pod -->|metrics| Prometheus["Prometheus"]
+      HPA["Horizontal Pod Autoscaler"] --> Deployment
+    end
+
+    EKS["EKS Cluster"] --> nodes["Worker Nodes"]
+    nodes --> Deployment
+  end
+
+  subgraph CI_CD["CI/CD & Registry"]
+    GitHub["GitHub Actions"] -->|build| DockerHub["Docker Hub (imagem)"]
+    DockerHub -->|imagem| Deployment
+    GitHub -->|terraform| Terraform["Terraform - infra-kubernetes"]
+  end
+
+  subgraph Observability["Observabilidade"]
+    Pod -->|logs JSON| Datadog["Datadog - Logs & APM (logs + traces)"]
+    Prometheus --> Datadog
+    Pod -->|metrics| Datadog
+  end
+```
+
