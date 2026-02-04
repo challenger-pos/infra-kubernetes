@@ -1,6 +1,8 @@
 terraform {
   backend "s3" {
-    bucket = "tf-state-challenge-bucket"
-    region = "us-east-2"
+    bucket  = "tf-state-challenge-bucket"
+    key     = "v4/kubernetes/homologation/terraform.tfstate"
+    region  = "us-east-2"
+    encrypt = true
   }
 }

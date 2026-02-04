@@ -5,7 +5,8 @@ resource "helm_release" "metrics_server" {
   namespace  = "kube-system"
 
   depends_on = [
-    aws_eks_node_group.node_group
+    aws_eks_node_group.node_group,
+    aws_eks_cluster.cluster
   ]
 
   values = [<<EOF

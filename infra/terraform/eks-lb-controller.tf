@@ -5,7 +5,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
 }
 
 resource "aws_iam_role" "lb_controller" {
-  name = "eks-lb-controller-role"
+  name = "${var.projectName}-eks-lb-controller-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -17,7 +17,7 @@ resource "aws_iam_role" "lb_controller" {
       }
       Condition = {
         StringEquals = {
-          "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
+          "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" : "system:serviceaccount:kube-system:aws-load-balancer-controller"
         }
       }
     }]
@@ -35,13 +35,14 @@ resource "aws_iam_role_policy_attachment" "lb_controller_ec2_readonly" {
 }
 
 resource "aws_iam_role_policy" "lb_controller_additional" {
-  name = "eks-lb-controller-additional"
+  name = "${var.projectName}-lb-controller-additional-${var.environment}"
   role = aws_iam_role.lb_controller.id
+  
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
-      Action = ["iam:CreateServiceLinkedRole"]
+      Effect   = "Allow"
+      Action   = ["iam:CreateServiceLinkedRole"]
       Resource = "arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/*"
     }]
   })
@@ -52,84 +53,42 @@ resource "helm_release" "lb_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
+  version    = "1.6.2"  # Especifique a versão
 
   depends_on = [
     aws_eks_node_group.node_group,
     aws_iam_role.lb_controller,
     aws_iam_role_policy_attachment.lb_controller_attach,
-    aws_iam_role_policy_attachment.lb_controller_final_attach
+    aws_eks_cluster.cluster
   ]
 
   set {
     name  = "clusterName"
     value = aws_eks_cluster.cluster.name
   }
+  
   set {
     name  = "serviceAccount.create"
     value = "true"
   }
+  
   set {
     name  = "serviceAccount.name"
     value = "aws-load-balancer-controller"
   }
+  
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.lb_controller.arn
   }
+  
   set {
     name  = "region"
     value = var.region_default
   }
+  
   set {
     name  = "vpcId"
-    value = data.terraform_remote_state.rds.outputs.vpc_id
+    value = local.vpc_id
   }
-}
-
-resource "aws_iam_policy" "lb_controller_policy" {
-  name        = "AWSLoadBalancerControllerIAMPolicy"
-  path        = "/"
-  description = "Permissoes para o EKS Load Balancer Controller"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = [
-          "ec2:CreateSecurityGroup",
-          "ec2:DescribeSecurityGroups",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress",
-          "ec2:DeleteSecurityGroup",
-          "ec2:CreateTags",
-          "ec2:DeleteTags",
-          "elasticloadbalancing:*",
-          "iam:CreateServiceLinkedRole",
-          "ec2:DescribeAccountAttributes",
-          "ec2:DescribeAddresses",
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeInternetGateways",
-          "ec2:DescribeVpcs",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeInstances",
-          "ec2:DescribeNetworkInterfaces",
-          "ec2:DescribeTags",
-          "ec2:GetCoipPoolUsage",
-          "ec2:DescribeCoipPools",
-          "cognito-idp:DescribeUserPoolClient",
-          "acm:ListCertificates",
-          "acm:DescribeCertificate"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "lb_controller_final_attach" {
-  policy_arn = aws_iam_policy.lb_controller_policy.arn
-  role       = aws_iam_role.lb_controller.name
 }
