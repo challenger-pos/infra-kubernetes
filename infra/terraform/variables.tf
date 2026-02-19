@@ -9,8 +9,9 @@ variable "region_default" {
 }
 
 variable "environment" {
-  type    = string
-  default = "homologation"
+  description = "Environment name (dev, homologation, production)"
+  type        = string
+  default     = "dev"
 }
 
 variable "eks_version" {

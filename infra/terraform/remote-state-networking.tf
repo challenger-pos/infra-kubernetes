@@ -3,8 +3,7 @@ data "terraform_remote_state" "networking" {
 
   config = {
     bucket = "tf-state-challenge-bucket"
-    # key    = "v4/networking/${var.environment}/terraform.tfstate"
-    key    = "v4/networking/dev/terraform.tfstate"
+    key    = "v4/networking/${var.environment}/terraform.tfstate"
     region = "us-east-2"
   }
 }

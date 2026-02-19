@@ -34,17 +34,38 @@ resource "aws_iam_role_policy_attachment" "lb_controller_ec2_readonly" {
   role       = aws_iam_role.lb_controller.name
 }
 
+# Política adicional para gerenciar Security Groups, Target Groups, etc
 resource "aws_iam_role_policy" "lb_controller_additional" {
   name = "${var.projectName}-lb-controller-additional-${var.environment}"
   role = aws_iam_role.lb_controller.id
   
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["iam:CreateServiceLinkedRole"]
-      Resource = "arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/*"
-    }]
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["iam:CreateServiceLinkedRole"]
+        Resource = "arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateSecurityGroup",
+          "ec2:DeleteSecurityGroup",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSecurityGroupRules",
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupEgress",
+          "ec2:ModifySecurityGroupRules",
+          "ec2:CreateTags",
+          "ec2:DeleteTags",
+          "ec2:DescribeTags"
+        ]
+        Resource = "*"
+      }
+    ]
   })
 }
 
