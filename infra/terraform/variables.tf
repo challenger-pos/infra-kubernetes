@@ -23,7 +23,7 @@ variable "eks_version" {
 variable "node_instance_types" {
   description = "Instance types for EKS nodes"
   type        = list(string)
-  default     = ["t3.small"]
+  default     = ["t3.medium"]
 }
 
 variable "node_disk_size" {
@@ -35,13 +35,13 @@ variable "node_disk_size" {
 variable "node_desired_size" {
   description = "Desired number of nodes"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "node_max_size" {
   description = "Maximum number of nodes"
   type        = number
-  default     = 3
+  default     = 4
 }
 
 variable "node_min_size" {
