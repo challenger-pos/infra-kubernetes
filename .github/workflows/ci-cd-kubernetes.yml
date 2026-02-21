@@ -10,13 +10,13 @@ on:
 
 env:
   TERRAFORM_INFRA_DIR: infra/terraform
-  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+  ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'dev') }}
 
 jobs:
   deploy-infra:
     name: Deploy Infra Kubernetes
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'develop') }}
+    environment: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'homologation' && 'homologation' || 'dev') }}
 
     steps:
       - name: Checkout code
@@ -36,7 +36,7 @@ jobs:
 
       - name: Terraform Infra Init
         working-directory: ${{ env.TERRAFORM_INFRA_DIR }}
-        run: terraform init -backend-config="key=kubernetes/${{ env.ENVIRONMENT }}/terraform.tfstate"
+        run: terraform init -backend-config="key=v4/kubernetes/${{ env.ENVIRONMENT }}/terraform.tfstate"
 
       - name: Terraform Infra Apply
         working-directory: ${{ env.TERRAFORM_INFRA_DIR }}
