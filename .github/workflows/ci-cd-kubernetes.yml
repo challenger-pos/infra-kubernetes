@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - homologation
+      - feature/*
   workflow_dispatch:
 
 env:
@@ -42,3 +43,4 @@ jobs:
         run: terraform apply -auto-approve
         env:
           TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_datadog_api_key: ${{ secrets.DATADOG_API_KEY }}

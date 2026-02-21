@@ -1,11 +1,7 @@
-variable "projectName" {
-  type = string
-  default = "challengeone-g19"
-}
-
-variable "region_default" {
-  type = string
-  default = "us-east-2"
+variable "datadog_api_key" {
+  description = "Datadog API key for monitoring"
+  type        = string
+  sensitive   = true
 }
 
 variable "environment" {
@@ -14,16 +10,28 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "eks_version" {
-  description = "Kubernetes version for EKS cluster"
+variable "projectName" {
+  description = "Project name for resource naming"
   type        = string
-  default     = "1.34"
+  default     = "challenger-pos"
+}
+
+variable "region_default" {
+  description = "Default AWS region"
+  type        = string
+  default     = "us-east-2"
+}
+
+variable "eks_version" {
+  description = "EKS cluster version"
+  type        = string
+  default     = "1.29"
 }
 
 variable "node_instance_types" {
-  description = "Instance types for EKS nodes"
+  description = "EC2 instance types for EKS nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
 }
 
 variable "node_disk_size" {
@@ -33,19 +41,19 @@ variable "node_disk_size" {
 }
 
 variable "node_desired_size" {
-  description = "Desired number of nodes"
+  description = "Desired number of EKS nodes"
+  type        = number
+  default     = 2
+}
+
+variable "node_max_size" {
+  description = "Maximum number of EKS nodes"
   type        = number
   default     = 3
 }
 
-variable "node_max_size" {
-  description = "Maximum number of nodes"
-  type        = number
-  default     = 4
-}
-
 variable "node_min_size" {
-  description = "Minimum number of nodes"
+  description = "Minimum number of EKS nodes"
   type        = number
   default     = 1
 }
