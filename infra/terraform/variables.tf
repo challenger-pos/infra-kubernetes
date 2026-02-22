@@ -43,13 +43,13 @@ variable "node_disk_size" {
 variable "node_desired_size" {
   description = "Desired number of EKS nodes"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "node_max_size" {
   description = "Maximum number of EKS nodes"
   type        = number
-  default     = 3
+  default     = 5
 }
 
 variable "node_min_size" {
