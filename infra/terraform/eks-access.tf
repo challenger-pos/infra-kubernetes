@@ -1,20 +1,30 @@
-resource "aws_eks_access_entry" "admin" {
-  cluster_name = aws_eks_cluster.cluster.name
-  principal_arn = data.aws_caller_identity.current.arn
+# resource "aws_eks_cluster" "cluster" {
+#   name     = local.cluster_name
+#   version  = var.eks_version
+#   role_arn = aws_iam_role.cluster.arn
 
-  type = "STANDARD"
-}
+#   access_config {
+#     authentication_mode = "API"
+#   }
 
-resource "aws_eks_access_policy_association" "terraform_admin" {
-  cluster_name  = aws_eks_cluster.cluster.name
-  principal_arn = data.aws_caller_identity.current.arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+#   vpc_config {
+#     subnet_ids = concat(
+#       local.public_subnet_ids,
+#       local.private_app_subnet_ids
+#     )
+#     security_group_ids      = [aws_security_group.eks_cluster.id]
+#     endpoint_public_access  = true
+#     endpoint_private_access = true
+#   }
 
-  access_scope {
-    type = "cluster"
-  }
+#   depends_on = [
+#     aws_iam_role_policy_attachment.cluster_policy
+#   ]
 
-  depends_on = [
-    aws_eks_access_entry.admin
-  ]
-}
+#   tags = merge(
+#     local.eks_tags,
+#     {
+#       Name = local.cluster_name
+#     }
+#   )
+# }
